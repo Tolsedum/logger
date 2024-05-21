@@ -10,7 +10,7 @@ FileBuffer::FileBuffer(
     if(create_file_if_not_exists_){
         ufn::createFileAndDirrs(file_name_);
     }else if(!std::filesystem::exists(file_name_)){
-        throw std::string("File is not exists " + file_name_);
+        throw std::runtime_error("File is not exists " + file_name_);
     }
     std::ifstream f(file_name_);
     std::string str;
@@ -45,13 +45,24 @@ void Logger::flashToFile(std::string name_file, std::vector<std::string>& list){
     }
 }
 
-void Logger::log(const std::string message, const std::string name_file, bool create_file_if_not_exists){
+void Logger::log(
+    const std::string message,
+    const std::string name_file,
+    log_level level,
+    bool create_file_if_not_exists
+){
     if(create_file_if_not_exists_ || create_file_if_not_exists){
-        ufn::createFileAndDirrs(name_file);
+        if(!ufn::createFileAndDirrs(name_file)){
+            std::string error = ufn::error_in_function_create_file_and_dir.what();
+            if(!error.empty()){
+                throw std::runtime_error(error);
+            }
+        }
     }else if(!std::filesystem::exists(name_file)){
-        throw std::string("File is not exists " + name_file);
+        throw std::runtime_error("File is not exists " + name_file);
     }
-    std::string str = "["
+    std::string str = log_level_str[level]
+        + " ["
         + ufn::currentDateTime()
         + "]: "
         + message;
