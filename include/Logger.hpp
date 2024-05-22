@@ -1,13 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-#include <map>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <filesystem>
-#include <iostream>
-
 #include <array>
 #include <exception>
 #include <mutex>

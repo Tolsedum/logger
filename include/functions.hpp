@@ -1,6 +1,7 @@
 #ifndef FUNCTIONS_HPP
 #define FUNCTIONS_HPP
 
+#include <map>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -31,7 +32,6 @@ namespace hashes{
  * @author Tolsedum
 */
 namespace ufn{
-
     inline std::runtime_error error_in_function_create_file_and_dir("");
     /**
      * @brief Сreate a file with parent directories
