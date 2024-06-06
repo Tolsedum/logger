@@ -1,7 +1,38 @@
 #ifndef FUNCTIONS_HPP
 #define FUNCTIONS_HPP
 
-#include <map>
+/**
+ *  __________________________________________
+ * |                                          |
+ * |   ╭━━━━┳━━━┳╮╱╱╭━━━┳━━━┳━━━┳╮╱╭┳━╮╭━╮    |
+ * |   ┃╭╮╭╮┃╭━╮┃┃╱╱┃╭━╮┃╭━━┻╮╭╮┃┃╱┃┃┃╰╯┃┃    |
+ * |   ╰╯┃┃╰┫┃╱┃┃┃╱╱┃╰━━┫╰━━╮┃┃┃┃┃╱┃┃╭╮╭╮┃    |
+ * |   ╱╱┃┃╱┃┃╱┃┃┃╱╭╋━━╮┃╭━━╯┃┃┃┃┃╱┃┃┃┃┃┃┃    |
+ * |   ╱╱┃┃╱┃╰━╯┃╰━╯┃╰━╯┃╰━━┳╯╰╯┃╰━╯┃┃┃┃┃┃    |
+ * |   ╱╱╰╯╱╰━━━┻━━━┻━━━┻━━━┻━━━┻━━━┻╯╰╯╰╯    |
+ * |__________________________________________|
+ * |                                          |
+ * | Permission is hereby granted, free of    |
+ * | charge, to any person obtaining a copy of|
+ * | of this software and accompanying files, |
+ * | to use them without restriction,         |
+ * | including, without limitation, the       |
+ * | rights to use, copy, modify, merge,      |
+ * | publish, distribute, sublicense and/or   |
+ * | sell copies of the software. The authors |
+ * | or copyright holders shall not be liable |
+ * | for any claims, damages or other         |
+ * | liability, whether in contract, tort or  |
+ * | otherwise, arising out of or in          |
+ * | connection with the software or your use |
+ * | or other dealings with the software.     |
+ * |__________________________________________|
+ * |   website: tolsedum.ru                   |
+ * |   email: tolsedum@gmail.com              |
+ * |   email: tolsedum@yandex.ru              |
+ * |__________________________________________|
+ */
+
 #include <vector>
 #include <iostream>
 #include <string>
@@ -32,6 +63,7 @@ namespace hashes{
  * @author Tolsedum
 */
 namespace ufn{
+
     inline std::runtime_error error_in_function_create_file_and_dir("");
     /**
      * @brief Сreate a file with parent directories
@@ -68,8 +100,16 @@ namespace ufn{
         template <typename Numeric> operator Numeric() { return 0;}
     };
 
+    /**
+     * @brief Chekc if string is numeric
+     * @param str chekcing string
+     * @return bool if is numeric then true else false
+     * @author Tolsedum
+     */
+    bool isNumeric(std::string str);
+
     inline std::string error_in_converter_function = "";
-    inline bool has_error_in_converter_function = false;
+    inline short has_error_in_converter_function = 0;
     /**
      * @brief String to int
      *      If has error then in has_error_in_int_function
@@ -80,6 +120,7 @@ namespace ufn{
      * @author Tolsedum
      */
     int strToInt(const std::string &number);
+
     /**
      * @brief String to double
      *      If has error then in has_error_in_int_function
@@ -90,6 +131,7 @@ namespace ufn{
      * @author Tolsedum
      */
     double strToDouble(const std::string &number);
+
     /**
      * @brief String to float
      *      If has error then in has_error_in_int_function
@@ -100,6 +142,7 @@ namespace ufn{
      * @author Tolsedum
      */
     float strToFloat(const std::string &number);
+
     /**
      * @brief String to long
      *      If has error then in has_error_in_int_function
@@ -110,6 +153,7 @@ namespace ufn{
      * @author Tolsedum
      */
     long strToLong(const std::string &number);
+
     /**
      * @brief String to long double
      *      If has error then in has_error_in_int_function
@@ -120,6 +164,7 @@ namespace ufn{
      * @author Tolsedum
      */
     long double strToLongDouble(const std::string &number);
+
     /**
      * @brief String to long long
      *      If has error then in has_error_in_int_function
@@ -130,6 +175,7 @@ namespace ufn{
      * @author Tolsedum
      */
     long long strToLongLong(const std::string &number);
+
      /**
      * @brief String to unsigned long
      *      If has error then in has_error_in_int_function
@@ -140,6 +186,7 @@ namespace ufn{
      * @author Tolsedum
      */
     unsigned long strToUnsignedLong(const std::string &number);
+
     /**
      * @brief String to long long
      *      If has error then in has_error_in_int_function
@@ -171,11 +218,13 @@ namespace ufn{
      * @author Tolsedum
     */
     std::string getFileContent(const std::string fileName);
+
     /**
-     * Delete commtnts
+     * Delete commtnts teg (#)
      * @author Tolsedum
     */
     std::string deleteComment(const std::string &str);
+
     /**
      * Hash function md5
      * @author Tolsedum
