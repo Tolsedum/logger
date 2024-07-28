@@ -7,7 +7,7 @@
             "request": "launch",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/output",
             "environment": [],
             "externalConsole": false,
             "linux": {
@@ -25,7 +25,19 @@
                 "miDebuggerPath": "gdb.exe",
                 "program": "${workspaceFolder}/output/main.exe"
             },
-            "preLaunchTask": "build"
+            "preLaunchTask": "build",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }
