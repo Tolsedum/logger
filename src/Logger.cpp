@@ -55,6 +55,7 @@ void Logger::collectFileInfo(std::string file_name, int f_size){
 }
 
 void Logger::archivingLogFiles(){
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto &&file_info : file_info_){
         std::string file_name = file_info.first;
         std::string parent_path = ufn::getParentDir(file_name);
@@ -100,16 +101,9 @@ void Logger::archivingLogFiles(){
                         time_live_zip_files_ <=
                             current_time - create_file_date
                     ){
-                        std::cout <<zip_file_name_ <<std::endl;
                         remove(zip_file_name_.c_str());
                     }
-                    // else{
-                    //     count++;
-                    // }
                 }
-                // else{
-                //     count++;
-                // }
                 if(!rename_file.empty()
                     && std::filesystem::exists(zip_file_name_
                 )){
@@ -176,7 +170,6 @@ void Logger::log(
             name_file,
             create_file_if_not_exists_ || create_file_if_not_exists
         );
-        // buf_.putBufferMessage(str, buffer_size_);
         buffer_[name_file] = buf_;
         buf = &buf_;
     }
