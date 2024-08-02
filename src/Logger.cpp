@@ -31,17 +31,26 @@ FileBuffer::FileBuffer(
     }
 }
 
+FileBuffer::~FileBuffer(){
+    if(!buffer_.empty()){
+        buffer_.clear();
+    }
+    if(!file_name_.empty()){
+        file_name_.clear();
+    }
+}
+
 bool FileBuffer::putBufferMessage(
-    std::string message, std::size_t buffer_size_
+    std::string message, unsigned buffer_size
 ){
     buffer_.push_back(message);
-    if(buffer_.size() == buffer_size_){
+    if(buffer_.size() == buffer_size){
         return true;
     }
     return false;
 }
 
-void Logger::collectFileInfo(std::string file_name, int f_size){
+void Logger::collectFileInfo(std::string file_name, unsigned f_size){
     if(size_file_to_zip_ != 0 && f_size >= size_file_to_zip_){
         auto search = file_info_.find(file_name);
         if(search == file_info_.end()){
@@ -162,19 +171,22 @@ void Logger::log(
         + message;
 
     auto search = buffer_.find(name_file);
-    FileBuffer *buf;
-    if(search != buffer_.end()){
-        buf = &buffer_[name_file];
-    }else{
+    if(search == buffer_.end()){
         FileBuffer buf_(
             name_file,
             create_file_if_not_exists_ || create_file_if_not_exists
         );
         buffer_[name_file] = buf_;
-        buf = &buf_;
+        auto data = buffer_.insert({name_file, buf_});
+        if(!data.second){
+            search = data.first;
+        }else{
+            throw std::runtime_error("Cant find element in buffer");
+        }
     }
-    if(buf->putBufferMessage(str, buffer_size_)){
-        flashToFile(name_file, buf->getBuffer());
+
+    if(search->second.putBufferMessage(str, buffer_size_)){
+        flashToFile(name_file, search->second.getBuffer());
         buffer_.erase(search);
     }
 }
@@ -184,7 +196,7 @@ void Logger::flash(){
         for(auto buf : buffer_){
             flashToFile(buf.first, buf.second.getBuffer());
         }
+        buffer_.clear();
     }
-    buffer_.clear();
     archivingLogFiles();
 }

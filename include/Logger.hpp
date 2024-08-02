@@ -1,6 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-/** Version 1 */
+/** Version 1.1 */
 
 /**
  *  __________________________________________
@@ -42,12 +42,12 @@
 
 struct FileInfo{
     std::string file_name_;
-    int file_size_;
+    unsigned file_size_;
     bool in_archive_;
 
     FileInfo(
         std::string file_name,
-        int file_size,
+        unsigned file_size,
         bool in_archive
     )
         : file_name_(file_name)
@@ -74,7 +74,7 @@ public:
     FileBuffer(
         std::string file_name, bool create_file_if_not_exists
     );
-    ~FileBuffer(){};
+    ~FileBuffer();
 
     std::string getFileName(){return file_name_;}
     std::vector<std::string> &getBuffer(){return buffer_;}
@@ -88,7 +88,7 @@ public:
      * @return false
      */
     bool putBufferMessage(
-        std::string message, std::size_t buffer_size_
+        std::string message, unsigned buffer_size
     );
 };
 
@@ -107,23 +107,23 @@ class Logger{
 private:
     std::map<std::string, FileBuffer> buffer_;
     std::map<std::string, FileInfo> file_info_;
-    std::size_t buffer_size_;
+    unsigned buffer_size_;
     std::mutex mutex_;
     bool create_file_if_not_exists_;
 
-    int size_file_to_zip_;
+    unsigned size_file_to_zip_;
     time_t time_live_zip_files_;
 
     void flashToFile(
         std::string name_file, std::vector<std::string>& list
     );
 
-    void collectFileInfo(std::string file_name, int f_size);
+    void collectFileInfo(std::string file_name, unsigned f_size);
 public:
     Logger(
-        std::size_t buffer_size = 10u,
+        unsigned buffer_size = 10u,
         bool create_file_if_not_exists = false,
-        int size_file_to_zip = 0,
+        unsigned size_file_to_zip = 0,
         unsigned long time_live_zip_files = 0 //(365 * 24 * 60 * 60)
     )
         : buffer_size_(buffer_size)
