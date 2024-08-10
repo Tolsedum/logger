@@ -98,6 +98,30 @@ inline static std::array<
     > log_level_str = {
     "ERROR", "WARNING", "CRITICAL", "DEBUG"
 };
+struct LoggerParams{
+    unsigned buffer_size_;
+    bool create_file_if_not_exists_;
+    unsigned size_file_to_zip_;
+    unsigned long time_live_zip_files_;
+
+    LoggerParams(){
+        buffer_size_ = 10u;
+        create_file_if_not_exists_ = false;
+        size_file_to_zip_ = 0;
+        time_live_zip_files_ = 0;
+    };
+    LoggerParams(
+        unsigned buffer_size,
+        bool create_file_if_not_exists,
+        unsigned size_file_to_zip,
+        unsigned long time_live_zip_files
+    )
+        : buffer_size_(buffer_size)
+        , create_file_if_not_exists_(create_file_if_not_exists)
+        , size_file_to_zip_(size_file_to_zip)
+        , time_live_zip_files_(time_live_zip_files)
+    {};
+};
 
 /**
  * @brief Logger object
@@ -121,11 +145,19 @@ private:
     void collectFileInfo(std::string file_name, unsigned f_size);
 
     int getMaxNum(const std::string &name);
-    void deleteFileIftimesUp(
+    void deleteFileIfTimesUp(
         const std::string &dir_path,
         const std::string &template_name
     );
 public:
+    /**
+     * @brief Loger construct
+     * @param buffer_size The number of lines stored in the buffer. If there are more lines, they are transferred to the log file
+     * @param create_file_if_not_exists create file if not exists
+     * @param size_file_to_zip file size for archiving
+     * @param time_live_zip_files The period after which the archive will be deleted
+     * @param begin_time_period the beginning of the period of deleting and archiving files
+     */
     Logger(
         unsigned buffer_size = 10u,
         bool create_file_if_not_exists = false,
@@ -136,9 +168,7 @@ public:
         , create_file_if_not_exists_(create_file_if_not_exists)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
-    {
-        std::cout << "Logger is debug on!" <<std::endl;
-    };
+    {};
     ~Logger(){flash();};
 
     void log(

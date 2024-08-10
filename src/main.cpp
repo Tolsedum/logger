@@ -12,7 +12,7 @@ Logger &getLog(){
 
 // int argc, char *argv[]
 int main() try{
-    std::string file_name{"test/test.log"};
+    std::string file_name{"log/server/request.log"};
 
     // std::string file_n{std::filesystem::path(file_name).stem()};
     // std::size_t pos = file_n.find_last_of("_");

@@ -79,11 +79,11 @@ int Logger::getMaxNum(const std::string &file_name){
     return count;
 }
 
-void Logger::deleteFileIftimesUp(
+void Logger::deleteFileIfTimesUp(
     const std::string &dir_path,
     const std::string &template_name
 ){
-
+    std::cout<< "dir_path: " << dir_path <<std::endl;
     for (auto &&file_name_in_path
         : std::filesystem::directory_iterator(dir_path)
     ){
@@ -91,8 +91,8 @@ void Logger::deleteFileIftimesUp(
             .string();
         std::string end_file_name("_");
         end_file_name.append(template_name).append(".zip");
-        std::size_t pos = s_name_file
-            .find(end_file_name);
+        std::size_t pos = s_name_file.find(end_file_name);
+
         if(pos != std::string::npos){
             unsigned long current_time = std::time(nullptr);
             unsigned long file_time =
@@ -100,6 +100,12 @@ void Logger::deleteFileIftimesUp(
             bool remove_file = time_live_zip_files_ != 0
                 && time_live_zip_files_ <= (current_time
                     - file_time);
+
+            std::cout
+                << "remove file: " << remove_file
+                << " s_name_file: " << s_name_file
+            << std::endl;
+
             if(remove_file){
                 remove(s_name_file.c_str());
             }
@@ -118,8 +124,8 @@ void Logger::archivingLogFiles(){
         if(pos != std::string::npos){
             template_file_name.erase(pos);
         }
-        std::cout << template_file_name << std::endl;
-        deleteFileIftimesUp(
+
+        deleteFileIfTimesUp(
             ufn::getParentDir(file_name),
             template_file_name
         );
@@ -140,7 +146,6 @@ void Logger::archivingLogFiles(){
         );
         zip_archive.addFile(file_name, path.filename());
         zip_archive.save();
-        std::cout << file_name << std::endl;
         remove(file_name.c_str());
     }
 }

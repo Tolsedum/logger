@@ -1,6 +1,6 @@
 #ifndef FUNCTIONS_HPP
 #define FUNCTIONS_HPP
-/** Version 1 */
+/** Version 1.1 */
 
 /**
  *  __________________________________________
@@ -105,6 +105,14 @@ namespace ufn{
         const std::string &x;
         template <typename Numeric> operator Numeric() { return 0;}
     };
+    /**
+     * @brief If a type is passed to a number with a
+     *  string type, it returns this type. It is advisable
+     *  to use it after isNumeric
+     * @param numeric
+     * @return numeric type if exists
+    */
+    std::string getNumericType(std::string numeric);
 
     /**
      * @brief Chekc if string is numeric
@@ -148,6 +156,17 @@ namespace ufn{
      * @author Tolsedum
      */
     float strToFloat(const std::string &number);
+
+    /**
+     * @brief String to unsigned
+     *      If has error then in has_error_in_int_function
+     *      set true and error description in hear error_in_int_function.
+     *
+     * @param number number by string format
+     * @return float
+     * @author Tolsedum
+     */
+    unsigned strToUnsigned(const std::string &number);
 
     /**
      * @brief String to long
@@ -244,8 +263,8 @@ namespace ufn{
      * @author Tolsedum
     */
     std::string currentDateTime(
-        std::string format = "%Y-%m-%d %H:%M:%S" // 2019-08-22 10:55:23
-    );
+        std::string format = "%Y-%m-%d %H:%M:%S");// 2019-08-22 10:55:23
+
 
     unsigned long getFileCreationDate(
         const std::string &file_name
