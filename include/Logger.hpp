@@ -1,6 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-/** Version 1.1 */
+/** Version 1.2 */
 
 /**
  *  __________________________________________
