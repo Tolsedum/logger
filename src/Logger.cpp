@@ -63,79 +63,84 @@ void Logger::collectFileInfo(std::string file_name, unsigned f_size){
     }
 }
 
+int Logger::getMaxNum(const std::string &file_name){
+    std::string parent_path = ufn::getParentDir(file_name);
+    int count = 0;
+    for (auto &&path_ :
+        std::filesystem::directory_iterator(
+            parent_path
+    )){
+        std::string file_n = path_.path().stem();
+        std::size_t pos = file_n.find_last_of("_");
+        if(pos != std::string::npos && path_.path().extension() == ".zip"){
+            count++;
+        }
+    }
+    return count;
+}
+
+void Logger::deleteFileIftimesUp(
+    const std::string &dir_path,
+    const std::string &template_name
+){
+
+    for (auto &&file_name_in_path
+        : std::filesystem::directory_iterator(dir_path)
+    ){
+        std::string s_name_file = file_name_in_path.path()
+            .string();
+        std::string end_file_name("_");
+        end_file_name.append(template_name).append(".zip");
+        std::size_t pos = s_name_file
+            .find(end_file_name);
+        if(pos != std::string::npos){
+            unsigned long current_time = std::time(nullptr);
+            unsigned long file_time =
+                ufn::getFileCreationDate(s_name_file);
+            bool remove_file = time_live_zip_files_ != 0
+                && time_live_zip_files_ <= (current_time
+                    - file_time);
+            if(remove_file){
+                remove(s_name_file.c_str());
+            }
+        }
+    }
+}
+
 void Logger::archivingLogFiles(){
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto &&file_info : file_info_){
+
         std::string file_name = file_info.first;
-        std::string parent_path = ufn::getParentDir(file_name);
-        // int count = 0;
-        std::map<std::string, std::string> rename_list;
-        for (auto &&path_ :
-            std::filesystem::directory_iterator(
-                parent_path
-        )){
-
-            std::string rename_file{path_.path().parent_path()};
-            std::string file_n =
-                path_.path().stem();
-            std::size_t pos = file_n.find_last_of("_");
-            if(pos != std::string::npos){
-                int num = ufn::strToInt(file_n.substr(pos+1));
-                file_n.erase(pos);
-                rename_file.append("/")
-                    .append(file_n)
-                    .append("_")
-                    .append(std::to_string(++num))
-                    .append(".zip");
-            }else{
-                rename_file.append("/")
-                    .append(file_n)
-                    .append("_1")
-                    .append(".zip");
-            }
-
-            pos = file_name.find(file_n);
-
-            if(std::string::npos != pos
-                && path_.path().extension() == ".zip"
-            ){
-                std::string zip_file_name_{path_.path()};
-
-                if(time_live_zip_files_ != 0){
-                    time_t create_file_date =
-                        ufn::getFileCreationDate(zip_file_name_);
-                    time_t current_time = std::time(nullptr);
-
-                    if(
-                        time_live_zip_files_ <=
-                            current_time - create_file_date
-                    ){
-                        remove(zip_file_name_.c_str());
-                    }
-                }
-                if(!rename_file.empty()
-                    && std::filesystem::exists(zip_file_name_
-                )){
-                    rename(
-                        zip_file_name_.c_str(),
-                        rename_file.c_str()
-                    );
-                }
-            }
+        std::string template_file_name =
+            std::filesystem::path(file_name).stem();
+        size_t pos = template_file_name.find_last_of("_");
+        if(pos != std::string::npos){
+            template_file_name.erase(pos);
         }
+        std::cout << template_file_name << std::endl;
+        deleteFileIftimesUp(
+            ufn::getParentDir(file_name),
+            template_file_name
+        );
 
         std::filesystem::path path(file_name);
         std::string file_name_zip = path.parent_path();
-        file_name_zip.append("/").append(path.stem());
-        // if(count > 0){
-        //     file_name_zip
-        //         .append("_")
-        //         .append(std::to_string(count));
-        // }
 
-        archive::Archiver zip_archive(file_name_zip + ".zip");
+        file_name_zip
+            .append("/")
+            .append(ufn::currentDateTime())
+            .append("_")
+            .append(template_file_name)
+            .append(".zip");
+        archive::Archiver zip_archive(
+            file_name_zip,
+            0,
+            true
+        );
         zip_archive.addFile(file_name, path.filename());
         zip_archive.save();
+        std::cout << file_name << std::endl;
         remove(file_name.c_str());
     }
 }

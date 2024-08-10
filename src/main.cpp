@@ -56,6 +56,30 @@ int main() try{
     getLog().log("save data8", file_name);
     getLog().log("save data9", file_name);
 
+    // std::string f_name = "test/test.txt";
+    // std::string parent_path = ufn::getParentDir(file_name);
+    // int count = 0;
+    // for (auto &&path_ :
+    //     std::filesystem::directory_iterator(
+    //         parent_path
+    // )){
+    //     std::string rename_file{path_.path().parent_path()};
+    //     std::string file_n = path_.path().stem();
+    //     std::size_t pos = file_n.find_last_of("_");
+    //     if(pos != std::string::npos && path_.path().extension() == ".zip"){
+    //         count++;
+    //     }
+    //     std::cout
+    //         << "pos: " << pos
+    //         << " file_n: " << file_n
+    //         << " rename_file: " << rename_file
+    //         << " count: " << count
+    //     <<std::endl;
+    // }
+
+    // for (int i = count; i > 0; i--){
+    //     std::cout << i <<std::endl;
+    // }
 
     std::cout << "Hello world!" << std::endl;
     return EXIT_SUCCESS;

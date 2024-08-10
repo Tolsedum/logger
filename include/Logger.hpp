@@ -112,13 +112,19 @@ private:
     bool create_file_if_not_exists_;
 
     unsigned size_file_to_zip_;
-    time_t time_live_zip_files_;
+    unsigned long time_live_zip_files_;
 
     void flashToFile(
         std::string name_file, std::vector<std::string>& list
     );
 
     void collectFileInfo(std::string file_name, unsigned f_size);
+
+    int getMaxNum(const std::string &name);
+    void deleteFileIftimesUp(
+        const std::string &dir_path,
+        const std::string &template_name
+    );
 public:
     Logger(
         unsigned buffer_size = 10u,
@@ -130,7 +136,9 @@ public:
         , create_file_if_not_exists_(create_file_if_not_exists)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
-    {};
+    {
+        std::cout << "Logger is debug on!" <<std::endl;
+    };
     ~Logger(){flash();};
 
     void log(
