@@ -189,10 +189,6 @@ std::string Logger::getNameFileForArchive(
 void Logger::flashToFile(
     std::string name_file, std::vector<std::string>& list
 ){
-    static int count = 0;
-    count++;
-    std::cout << "count: " << count << std::endl;
-
     if(list.empty()){
         return;
     }
