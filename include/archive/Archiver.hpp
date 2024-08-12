@@ -51,6 +51,8 @@ namespace archive{
         // bool throw_if_zip_exsists_;
         // int compression_method_;
 
+        bool throw_if_zip_exsists_;
+
         short flag_;
 
         std::string archive_file_name_;
@@ -126,12 +128,13 @@ namespace archive{
             short flag = 0,
             bool throw_if_zip_exsists = false
         )
-            : flag_(flag)
+            : throw_if_zip_exsists_(throw_if_zip_exsists)
+            , flag_(flag)
             , archive_file_name_(name)
         {
             if(throw_if_zip_exsists && std::filesystem::exists(name)){
                 throw "Zip file exists " + name;
-            }
+            } 
         };
         ~Archiver(){};
 

@@ -1,6 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-/** Version 1.2 */
+/** Version 2 */
 
 /**
  *  __________________________________________
@@ -36,7 +36,7 @@
 
 #include <array>
 #include <exception>
-#include <mutex>
+#include <thread>
 #include "functions.hpp"
 #include "archive/Archiver.hpp"
 
@@ -47,7 +47,7 @@ struct FileInfo{
 
     FileInfo(
         std::string file_name,
-        unsigned file_size,
+        unsigned long file_size,
         bool in_archive
     )
         : file_name_(file_name)
@@ -98,29 +98,49 @@ inline static std::array<
     > log_level_str = {
     "ERROR", "WARNING", "CRITICAL", "DEBUG"
 };
+
 struct LoggerParams{
+public:
     unsigned buffer_size_;
-    bool create_file_if_not_exists_;
     unsigned size_file_to_zip_;
     unsigned long time_live_zip_files_;
+    bool create_file_if_not_exists_;
+    bool is_atomic_;
 
     LoggerParams(){
-        buffer_size_ = 10u;
+        is_atomic_ = false;
         create_file_if_not_exists_ = false;
+        buffer_size_ = 10u;
         size_file_to_zip_ = 0;
         time_live_zip_files_ = 0;
     };
     LoggerParams(
-        unsigned buffer_size,
-        bool create_file_if_not_exists,
-        unsigned size_file_to_zip,
-        unsigned long time_live_zip_files
+        unsigned buffer_size = 10U,
+        unsigned size_file_to_zip = 0,
+        unsigned long time_live_zip_files = 0,
+        bool create_file_if_not_exists = false,
+        bool is_atomic = false
+
     )
         : buffer_size_(buffer_size)
-        , create_file_if_not_exists_(create_file_if_not_exists)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
+        , create_file_if_not_exists_(create_file_if_not_exists)
+        , is_atomic_(is_atomic)
     {};
+
+    friend std::ostream &operator <<(
+        std::ostream &o_stream, const LoggerParams &lparams
+    ){
+        o_stream
+            << "is_atomic_: " << lparams.is_atomic_
+            << " create_file_if_not_exists_: " << lparams.create_file_if_not_exists_
+            << " buffer_size: " << lparams.buffer_size_
+            << " size_file_to_zip: " << lparams.size_file_to_zip_
+            << " time_live_zip_files: " << lparams.time_live_zip_files_
+        << std::endl;
+        return o_stream;
+    }
 };
 
 /**
@@ -129,25 +149,41 @@ struct LoggerParams{
  */
 class Logger{
 private:
+    // static std::atomic<bool> start_;
+    bool is_atomic_;
     std::map<std::string, FileBuffer> buffer_;
     std::map<std::string, FileInfo> file_info_;
     unsigned buffer_size_;
-    std::mutex mutex_;
     bool create_file_if_not_exists_;
 
-    unsigned size_file_to_zip_;
+
+    unsigned long size_file_to_zip_;
     unsigned long time_live_zip_files_;
 
     void flashToFile(
         std::string name_file, std::vector<std::string>& list
     );
 
-    void collectFileInfo(std::string file_name, unsigned f_size);
+    void collectFileInfo(
+        std::string file_name, unsigned long f_size);
 
     int getMaxNum(const std::string &name);
+
     void deleteFileIfTimesUp(
         const std::string &dir_path,
         const std::string &template_name
+    );
+
+    std::string getNameFileForArchive(
+        std::string &parent_path, std::string &template_file_name
+    );
+
+    void insertInLog(
+        const std::string message,
+        const std::string name_file,
+        log_level level,
+        bool create_file_if_not_exists
+
     );
 public:
     /**
@@ -168,14 +204,28 @@ public:
         , create_file_if_not_exists_(create_file_if_not_exists)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
+    {
+        is_atomic_ = false;
+    };
+    Logger(LoggerParams loggerParams)
+        : is_atomic_(loggerParams.is_atomic_)
+        , buffer_size_(loggerParams.buffer_size_)
+        , create_file_if_not_exists_(loggerParams.create_file_if_not_exists_)
+        , size_file_to_zip_(loggerParams.size_file_to_zip_)
+        , time_live_zip_files_(loggerParams.time_live_zip_files_)
     {};
     ~Logger(){flash();};
 
     void log(
         const std::string message,
         const std::string name_file,
-        log_level level = log_level::debug,
-        bool create_file_if_not_exists = false
+        log_level level,
+        bool create_file_if_not_exists
+    );
+    void log(
+        const std::string message,
+        const std::string name_file,
+        log_level level
     );
 
     void flash();
