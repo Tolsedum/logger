@@ -1,6 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-/** Version 2 */
+/** Version 2.2 */
 
 /**
  *  __________________________________________
@@ -37,8 +37,11 @@
 #include <array>
 #include <exception>
 #include <thread>
+#include <semaphore>
 #include "functions.hpp"
 #include "archive/Archiver.hpp"
+
+inline std::binary_semaphore lock_queue_sem{1};
 
 struct FileInfo{
     std::string file_name_;
@@ -74,6 +77,10 @@ public:
     FileBuffer(
         std::string file_name, bool create_file_if_not_exists
     );
+    FileBuffer(){
+        create_file_if_not_exists_ = false;
+        file_name_ = "";
+    };
     ~FileBuffer();
 
     std::string getFileName(){return file_name_;}
@@ -90,6 +97,8 @@ public:
     bool putBufferMessage(
         std::string message, unsigned buffer_size
     );
+
+    void merge(FileBuffer &&fb, unsigned buffer_size);
 };
 
 enum log_level { error, warning, critical, debug };
@@ -105,10 +114,8 @@ public:
     unsigned size_file_to_zip_;
     unsigned long time_live_zip_files_;
     bool create_file_if_not_exists_;
-    bool is_atomic_;
 
     LoggerParams(){
-        is_atomic_ = false;
         create_file_if_not_exists_ = false;
         buffer_size_ = 10u;
         size_file_to_zip_ = 0;
@@ -118,22 +125,19 @@ public:
         unsigned buffer_size = 10U,
         unsigned size_file_to_zip = 0,
         unsigned long time_live_zip_files = 0,
-        bool create_file_if_not_exists = false,
-        bool is_atomic = false
+        bool create_file_if_not_exists = false
 
     )
         : buffer_size_(buffer_size)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
         , create_file_if_not_exists_(create_file_if_not_exists)
-        , is_atomic_(is_atomic)
     {};
 
     friend std::ostream &operator <<(
         std::ostream &o_stream, const LoggerParams &lparams
     ){
         o_stream
-            << "is_atomic_: " << lparams.is_atomic_
             << " create_file_if_not_exists_: " << lparams.create_file_if_not_exists_
             << " buffer_size: " << lparams.buffer_size_
             << " size_file_to_zip: " << lparams.size_file_to_zip_
@@ -149,8 +153,6 @@ public:
  */
 class Logger{
 private:
-    // static std::atomic<bool> start_;
-    bool is_atomic_;
     std::map<std::string, FileBuffer> buffer_;
     std::map<std::string, FileInfo> file_info_;
     unsigned buffer_size_;
@@ -161,7 +163,7 @@ private:
     unsigned long time_live_zip_files_;
 
     void flashToFile(
-        std::string name_file, std::vector<std::string>& list
+        std::string name_file, std::vector<std::string>&& list
     );
 
     void collectFileInfo(
@@ -204,12 +206,9 @@ public:
         , create_file_if_not_exists_(create_file_if_not_exists)
         , size_file_to_zip_(size_file_to_zip)
         , time_live_zip_files_(time_live_zip_files)
-    {
-        is_atomic_ = false;
-    };
+    {};
     Logger(LoggerParams loggerParams)
-        : is_atomic_(loggerParams.is_atomic_)
-        , buffer_size_(loggerParams.buffer_size_)
+        : buffer_size_(loggerParams.buffer_size_)
         , create_file_if_not_exists_(loggerParams.create_file_if_not_exists_)
         , size_file_to_zip_(loggerParams.size_file_to_zip_)
         , time_live_zip_files_(loggerParams.time_live_zip_files_)

@@ -1,5 +1,8 @@
 #include "Logger.hpp"
 
+
+/*---------------- FileBuffer ---------------- */
+
 FileBuffer::FileBuffer(
     std::string file_name,
     bool create_file_if_not_exists
@@ -50,17 +53,24 @@ bool FileBuffer::putBufferMessage(
     return false;
 }
 
+void FileBuffer::merge(FileBuffer &&fb, unsigned buffer_size){
+    for (auto &&iter : fb.getBuffer()){
+        putBufferMessage(iter, buffer_size);
+    }
+}
+
+/*---------------- END FileBuffer ---------------- */
+
 void Logger::collectFileInfo(
     std::string file_name,
     unsigned long f_size
 ){
     if(size_file_to_zip_ != 0 && f_size >= size_file_to_zip_){
-        auto search = file_info_.find(file_name);
-        if(search == file_info_.end()){
-            file_info_.insert(std::pair<std::string, FileInfo>(
+        auto [search, success] = file_info_.insert(
+            std::pair<std::string, FileInfo>(
                 file_name, {file_name, f_size, true}
-            ));
-        }else{
+        ));
+        if(!success){
             search->second.in_archive_ = true;
         }
     }
@@ -111,41 +121,41 @@ void Logger::deleteFileIfTimesUp(
 }
 
 void Logger::archivingLogFiles(){
-    for (auto &&file_info : file_info_){
+    if(!file_info_.empty()){
+        for (auto &&file_info : file_info_){
+            std::string file_name = file_info.first;
+            std::string template_file_name =
+                std::filesystem::path(file_name).stem();
+            size_t pos = template_file_name.find_last_of("_");
+            if(pos != std::string::npos){
+                template_file_name.erase(pos);
+            }
 
-        std::string file_name = file_info.first;
-        std::string template_file_name =
-            std::filesystem::path(file_name).stem();
-        size_t pos = template_file_name.find_last_of("_");
-        if(pos != std::string::npos){
-            template_file_name.erase(pos);
+            deleteFileIfTimesUp(
+                ufn::getParentDir(file_name),
+                template_file_name
+            );
+
+            std::filesystem::path path(file_name);
+            std::string parent_path =
+                std::filesystem::path(file_name).parent_path();
+
+            std::string file_name_zip = getNameFileForArchive(
+                parent_path, template_file_name
+            );
+
+            if(std::filesystem::exists(file_name_zip)){
+                throw "file exists";
+            }
+            archive::Archiver zip_archive(
+                file_name_zip,
+                0,
+                true
+            );
+            zip_archive.addFile(file_name, path.filename());
+            zip_archive.save();
+            remove(file_name.c_str());
         }
-
-        deleteFileIfTimesUp(
-            ufn::getParentDir(file_name),
-            template_file_name
-        );
-
-        std::filesystem::path path(file_name);
-        std::string parent_path =
-            std::filesystem::path(file_name).parent_path();
-
-        std::string file_name_zip = getNameFileForArchive(
-            parent_path, template_file_name
-        );
-
-        if(std::filesystem::exists(file_name_zip)){
-            std::cout << "file exists: "<< file_name_zip<<std::endl;
-            throw "file exists";
-        }
-        archive::Archiver zip_archive(
-            file_name_zip,
-            0,
-            true
-        );
-        zip_archive.addFile(file_name, path.filename());
-        zip_archive.save();
-        remove(file_name.c_str());
     }
     file_info_.clear();
 }
@@ -179,15 +189,15 @@ std::string Logger::getNameFileForArchive(
 
     if(set){
         // ToDo Do some
-        std::cout
-            << "File exists !!!!!!!!!!!!!!!!!!!!!!!!!"
-        << std::endl;
+        // std::cout
+        //     << "File exists !!!!!!!!!!!!!!!!!!!!!!!!!"
+        // << std::endl;
     }
     return file_name_zip;
 }
 
 void Logger::flashToFile(
-    std::string name_file, std::vector<std::string>& list
+    std::string name_file, std::vector<std::string>&& list
 ){
     if(list.empty()){
         return;
@@ -220,19 +230,15 @@ void Logger::insertInLog(
         return;
     }
 
-    std::map<std::string, FileBuffer>::iterator search =
-        buffer_.find(name_file);
 
-    if(search == buffer_.end()){
-        FileBuffer buf_(
-            name_file,
-            create_file_if_not_exists
-        );
-        auto [search__, success] = buffer_.insert({name_file, buf_});
-        if(!success){
-            throw std::runtime_error("Cant insert in buffer");
-        }
-        search = search__;
+    FileBuffer buf_(
+        name_file,
+        create_file_if_not_exists
+    );
+    auto [search, success] = buffer_.insert({name_file, buf_});
+    if(!success){
+        // throw std::runtime_error("Cant insert in buffer");
+        // search->second.merge();
     }
 
     std::string str = log_level_str[level]
@@ -241,10 +247,9 @@ void Logger::insertInLog(
         + "]: "
         + message;
 
-    if(search->second.putBufferMessage(str, buffer_size_)
-        && !is_atomic_
-    ){
-        flashToFile(name_file, search->second.getBuffer());
+    if(search->second.putBufferMessage(str, buffer_size_)){
+        flashToFile(name_file, std::move(search->second.getBuffer()));
+        buffer_.erase(search);
     }
 }
 
@@ -253,12 +258,14 @@ void Logger::log(
     const std::string name_file,
     log_level level
 ){
+    lock_queue_sem.acquire();//lock
     insertInLog(
         message,
         name_file,
         level,
         create_file_if_not_exists_
     );
+    lock_queue_sem.release();//unlock
 }
 
 void Logger::log(
@@ -267,22 +274,26 @@ void Logger::log(
     log_level level,
     bool create_file_if_not_exists
 ){
+    lock_queue_sem.acquire();//lock
     insertInLog(
         message,
         name_file,
         level,
         create_file_if_not_exists
     );
+    lock_queue_sem.release();//unlock
 }
 
 void Logger::flash(){
+    lock_queue_sem.acquire();//lock
     if(!buffer_.empty()){
-        for(auto buf : buffer_){
-            std::vector<std::string> *buf_p =
-                &buf.second.getBuffer();
-            flashToFile(buf.first, *buf_p);
+        for(auto &&buf : buffer_){
+            flashToFile(
+                buf.first, std::move(buf.second.getBuffer())
+            );
         }
         buffer_.clear();
     }
     archivingLogFiles();
+    lock_queue_sem.release();//unlock
 }

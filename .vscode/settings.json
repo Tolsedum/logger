@@ -161,6 +161,10 @@
         {
             "tag": "TODO",
             "color": "#77C3EC"
+        },
+        {
+            "tag": "!",
+            "color": "red"
         }
     ],
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
